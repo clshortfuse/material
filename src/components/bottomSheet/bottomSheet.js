@@ -173,12 +173,12 @@ function MdBottomSheetProvider($$interimElementProvider) {
           focusable.focus();
 
           if (options.escapeToClose) {
-            options.rootElementKeyupCallback = function(e) {
+            options.rootElementKeydownCallback = function(e) {
               if (e.keyCode === $mdConstant.KEY_CODE.ESCAPE) {
                 $mdUtil.nextTick($mdBottomSheet.cancel,true);
               }
             };
-            $rootElement.on('keyup', options.rootElementKeyupCallback);
+            $rootElement.on('keydown', options.rootElementKeydownCallback);
           }
         });
 
