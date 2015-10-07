@@ -198,6 +198,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
         to: toOptions
     }).start().done(function () {
         $scope.$broadcast('$mdTabsPaginationChanged');
+        ctrl.tabs[ ctrl.selectedIndex ] && ctrl.tabs[ ctrl.selectedIndex ].scope.select();
     });
   }
 
@@ -228,7 +229,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
     adjustOffset(newValue);
     $scope.$broadcast('$mdTabsChanged');
     ctrl.tabs[ oldValue ] && ctrl.tabs[ oldValue ].scope.deselect();
-    ctrl.tabs[ newValue ] && ctrl.tabs[ newValue ].scope.select();
+    //ctrl.tabs[ newValue ] && ctrl.tabs[ newValue ].scope.select();
   }
 
   function getTabElementIndex(tabEl){
