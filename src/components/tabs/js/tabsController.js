@@ -715,10 +715,13 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
       }, 0);
       if (totalWidth > tabWidth) $mdUtil.nextTick(updateInkBarStyles, false);
     }
-    angular.element(elements.inkBar).css({ 
-        left: left + 'px', 
-        right: right + 'px' 
-    }).promise().done(updateInkBarClassName);
+    
+    $animateCss(angular.element(elements.inkBar), {
+        to: { 
+            left: left + 'px', 
+            right: right + 'px' 
+        }
+    }).start().done(updateInkBarClassName);
   }
 
   /**
