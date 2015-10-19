@@ -72,7 +72,7 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout) {
           nestedMenu.open();
         }
       }, nestedMenu ? 100 : 250);
-      var focusableTarget = event.currentTarget.querySelector('[tabindex]');
+      var focusableTarget = event.currentTarget.querySelector('button:not([disabled])');
       focusableTarget && focusableTarget.focus();
     });
     menuItems.on('mouseleave', function(event) {
@@ -143,8 +143,9 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout) {
   this.close = function closeMenu(skipFocus, closeOpts) {
     if ( !self.isOpen ) return;
     self.isOpen = false;
-    $mdUtil.nextTick(function(){ $scope.onIsOpenChanged(self.isOpen);});
-    $scope.$emit('$mdMenuClose', $element);
+
+    var eventDetails = angular.extend({}, closeOpts, { skipFocus: skipFocus });
+    $scope.$emit('$mdMenuClose', $element, eventDetails);
     $mdMenu.hide(null, closeOpts);
 
     if (!skipFocus) {

@@ -39,6 +39,9 @@ md-list {
 }
 
 md-list-item {
+  // Ensure nested dividers are properly positioned
+  position: relative;
+
   &.md-proxy-focus.md-focused .md-no-style {
     transition: background-color 0.15s linear;
   }
@@ -46,7 +49,7 @@ md-list-item {
   .md-no-style {
     position: relative;
     padding: $list-item-padding-vertical $list-item-padding-horizontal;
-    flex: 1;
+    flex: 1 1 auto;
     
     &.md-button {
       font-size: inherit;
@@ -87,12 +90,13 @@ md-list-item, md-list-item .md-list-item-inner {
   justify-content: flex-start;
   align-items: center;
   min-height: $list-item-height;
+  height:auto;
 
   // Layout for controls in primary or secondary divs, or auto-infered first child
-  & > div.md-primary > md-icon,
-  & > div.md-secondary > md-icon,
-  & > md-icon:first-child, 
-  > md-icon.md-secondary {
+  & > div.md-primary > md-icon:not(.md-avatar-icon),
+  & > div.md-secondary > md-icon:not(.md-avatar-icon),
+  & > md-icon:first-child:not(.md-avatar-icon),
+  > md-icon.md-secondary:not(.md-avatar-icon) {
     width: $list-item-primary-icon-width;
     margin-top: 16px;
     margin-bottom: 12px;
@@ -106,7 +110,7 @@ md-list-item, md-list-item .md-list-item-inner {
     .md-label { display: none; }
   }
 
-  & > md-icon:first-child {
+  & > md-icon:first-child:not(.md-avatar-icon) {
     margin-right: $list-item-primary-width - $list-item-primary-icon-width;
   }
   & > md-checkbox:first-child {
@@ -114,14 +118,19 @@ md-list-item, md-list-item .md-list-item-inner {
     margin-left: 3px;
     margin-right: 29px;
   }
-  & > .md-avatar:first-child {
-    width: $list-item-primary-avatar-width;
-    height: $list-item-primary-avatar-width;
+  & > .md-avatar, .md-avatar-icon {
     margin-top: $baseline-grid;
     margin-bottom: $baseline-grid;
     margin-right: $list-item-primary-width - $list-item-primary-avatar-width;
     border-radius: 50%;
     box-sizing: content-box;
+  }
+  & > .md-avatar {
+    width: $list-item-primary-avatar-width;
+    height: $list-item-primary-avatar-width;
+  }
+  & > .md-avatar-icon {
+    padding: 8px;
   }
 
   md-checkbox.md-secondary,
@@ -212,8 +221,13 @@ md-list-item.md-3-line > .md-no-style {
 
 md-list-item.md-2-line,
 md-list-item.md-2-line > .md-no-style {
-  height: $list-item-two-line-height;
-  > .md-avatar:first-child {
+  height:auto;
+  min-height: $list-item-two-line-height;
+  &.md-long-text {
+      margin:1.6em;
+    }
+
+  > .md-avatar, .md-avatar-icon {
     margin-top: $baseline-grid * 1.5;
   }
   > md-icon:first-child {
@@ -226,9 +240,15 @@ md-list-item.md-2-line > .md-no-style {
 
 md-list-item.md-3-line,
 md-list-item.md-3-line > .md-no-style {
-  height: $list-item-three-line-height;
-  > md-icon:first-child, 
-  > .md-avatar:first-child {
+  height:auto;
+  min-height: $list-item-three-line-height;
+
+  &.md-long-text {
+    margin:1.6em;
+  }
+
+  > md-icon:first-child,
+  > .md-avatar {
     margin-top: $baseline-grid * 2;
   }
 }

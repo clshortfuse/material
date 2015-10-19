@@ -132,7 +132,7 @@ describe('$mdDialog', function() {
       expect($document.activeElement).toBe(parent[0].querySelector('md-dialog-content'));
     }));
 
-    it('should remove `md-dialog-container` on click and remove', inject(function($mdDialog, $rootScope, $timeout) {
+    it('should remove `md-dialog-container` on mousedown mouseup and remove', inject(function($mdDialog, $rootScope, $timeout) {
       jasmine.mockElementFocus(this);
       var container, parent = angular.element('<div>');
 
@@ -152,7 +152,11 @@ describe('$mdDialog', function() {
 
       container = angular.element(parent[0].querySelector('.md-dialog-container'));
       container.triggerHandler({
-        type: 'click',
+        type: 'mousedown',
+        target: container[0]
+      });
+      container.triggerHandler({
+        type: 'mouseup',
         target: container[0]
       });
 
@@ -290,7 +294,7 @@ describe('$mdDialog', function() {
       expect($document.activeElement).toBe(parent[0].querySelector('.dialog-close'));
     }));
 
-    it('should remove `md-dialog-container` after click outside', inject(function($mdDialog, $rootScope, $timeout, $animate) {
+    it('should remove `md-dialog-container` after mousedown mouseup outside', inject(function($mdDialog, $rootScope, $timeout, $animate) {
       jasmine.mockElementFocus(this);
       var container, parent = angular.element('<div>');
 
@@ -311,7 +315,11 @@ describe('$mdDialog', function() {
 
       container = angular.element(parent[0].querySelector('.md-dialog-container'));
       container.triggerHandler({
-        type: 'click',
+        type: 'mousedown',
+        target: container[0]
+      });
+      container.triggerHandler({
+        type: 'mouseup',
         target: container[0]
       });
 
@@ -320,6 +328,80 @@ describe('$mdDialog', function() {
 
       container = angular.element(parent[0].querySelector('.md-dialog-container'));
       expect(container.length).toBe(0);
+    }));
+
+    it('should not remove `md-dialog-container` after mousedown outside mouseup inside', inject(function($mdDialog, $rootScope, $timeout, $animate) {
+      jasmine.mockElementFocus(this);
+      var container, parent = angular.element('<div>');
+
+      $mdDialog.show(
+        $mdDialog.confirm({
+          template: '<md-dialog>' +
+          '<md-dialog-content tabIndex="0">' +
+          '<p>Muppets are the best</p>' +
+          '</md-dialog-content>' +
+          '</md-dialog>',
+          parent: parent,
+          clickOutsideToClose: true,
+          ok: 'OK',
+          cancel: 'CANCEL'
+        })
+      );
+      runAnimation();
+
+      container = angular.element(parent[0].querySelector('.md-dialog-container'));
+      var content = angular.element(parent[0].querySelector('md-dialog-content'));
+      container.triggerHandler({
+        type: 'mousedown',
+        target: container[0]
+      });
+      content.triggerHandler({
+        type: 'mouseup',
+        target: content[0]
+      });
+
+      runAnimation();
+      runAnimation();
+
+      container = angular.element(parent[0].querySelector('.md-dialog-container'));
+      expect(container.length).toBe(1);
+    }));
+
+    it('should not remove `md-dialog-container` after mousedown inside mouseup outside', inject(function($mdDialog, $rootScope, $timeout, $animate) {
+      jasmine.mockElementFocus(this);
+      var container, parent = angular.element('<div>');
+
+      $mdDialog.show(
+        $mdDialog.confirm({
+          template: '<md-dialog>' +
+          '<md-dialog-content tabIndex="0">' +
+          '<p>Muppets are the best</p>' +
+          '</md-dialog-content>' +
+          '</md-dialog>',
+          parent: parent,
+          clickOutsideToClose: true,
+          ok: 'OK',
+          cancel: 'CANCEL'
+        })
+      );
+      runAnimation();
+
+      container = angular.element(parent[0].querySelector('.md-dialog-container'));
+      var content = angular.element(parent[0].querySelector('md-dialog-content'));
+      content.triggerHandler({
+        type: 'mousedown',
+        target: content[0]
+      });
+      container.triggerHandler({
+        type: 'mouseup',
+        target: container[0]
+      });
+
+      runAnimation();
+      runAnimation();
+
+      container = angular.element(parent[0].querySelector('.md-dialog-container'));
+      expect(container.length).toBe(1);
     }));
 
     it('should remove `md-dialog-container` after ESCAPE key', inject(function($mdDialog, $rootScope, $timeout, $mdConstant) {
@@ -354,11 +436,36 @@ describe('$mdDialog', function() {
 
       container = angular.element(parent[0].querySelector('.md-dialog-container'));
       expect(container.length).toBe(0);
-      expect(response).toBe(false);
+      expect(response).toBe(undefined);
     }));
   });
 
   describe('#build()', function() {
+    it('should support onShowing callbacks before `show()` starts', inject(function($mdDialog, $rootScope) {
+
+      var template = '<md-dialog>Hello</md-dialog>';
+      var parent = angular.element('<div>');
+      var showing = false;
+
+      $mdDialog.show({
+        template: template,
+        parent: parent,
+        onShowing: onShowing
+      });
+      $rootScope.$apply();
+
+      runAnimation();
+
+      function onShowing(scope, element, options) {
+        showing = true;
+        container = angular.element(parent[0].querySelector('.md-dialog-container'));
+        expect(arguments.length).toEqual(3);
+        expect(container.length).toBe(0);
+      }
+
+      expect(showing).toBe(true);
+    }));
+
     it('should support onComplete callbacks within `show()`', inject(function($mdDialog, $rootScope, $timeout, $mdConstant) {
 
       var template = '<md-dialog>Hello</md-dialog>';
@@ -438,37 +545,61 @@ describe('$mdDialog', function() {
       nodes.remove();
     }));
 
-    it('should not wrap content with existing md-dialog', inject(function($mdDialog, $rootScope) {
+    describe('when autoWrap parameter is true (default)', function() {
 
-      var template = '<md-dialog><div id="rawContent">Hello</div></md-dialog>';
-      var parent = angular.element('<div>');
+      it('should not wrap content with existing md-dialog', inject(function($mdDialog, $rootScope) {
 
-      $mdDialog.show({
-        template: template,
-        parent: parent
-      });
+        var template = '<md-dialog><div id="rawContent">Hello</div></md-dialog>';
+        var parent = angular.element('<div>');
 
-      $rootScope.$apply();
+        $mdDialog.show({
+          template: template,
+          parent: parent
+        });
 
-      var container = parent[0].querySelectorAll('md-dialog');
-      expect(container.length).toBe(1);
-    }));
+        $rootScope.$apply();
 
-    it('should wrap raw content with md-dialog', inject(function($mdDialog, $rootScope) {
+        var container = parent[0].querySelectorAll('md-dialog');
+        expect(container.length).toBe(1);
+      }));
 
-      var template = '<div id="rawContent">Hello</div>';
-      var parent = angular.element('<div>');
+      it('should wrap raw content with md-dialog', inject(function($mdDialog, $rootScope) {
 
-      $mdDialog.show({
-        template: template,
-        parent: parent
-      });
+        var template = '<div id="rawContent">Hello</div>';
+        var parent = angular.element('<div>');
 
-      $rootScope.$apply();
+        $mdDialog.show({
+          template: template,
+          parent: parent
+        });
 
-      var container = parent[0].querySelectorAll('md-dialog');
-      expect(container.length).toBe(1);
-    }));
+        $rootScope.$apply();
+
+        var container = parent[0].querySelectorAll('md-dialog');
+        expect(container.length).toBe(1);
+      }));
+    });
+
+
+    describe('when autoWrap parameter is false', function() {
+
+      it('should not wrap raw content with md-dialog', inject(function($mdDialog, $rootScope) {
+
+        var template = '<div id="rawContent">Hello</div>';
+        var parent = angular.element('<div>');
+
+        $mdDialog.show({
+          template: template,
+          parent: parent,
+          autoWrap: false
+        });
+
+        $rootScope.$apply();
+
+        var container = parent[0].querySelectorAll('md-dialog');
+        expect(container.length).toBe(0);
+      }));
+    });
 
     it('should append dialog within a md-dialog-container', inject(function($mdDialog, $rootScope) {
 
@@ -544,7 +675,11 @@ describe('$mdDialog', function() {
       expect(parent.find('md-dialog').length).toBe(1);
 
       container.triggerHandler({
-        type: 'click',
+        type: 'mousedown',
+        target: container[0]
+      });
+      container.triggerHandler({
+        type: 'mouseup',
         target: container[0]
       });
       runAnimation();
