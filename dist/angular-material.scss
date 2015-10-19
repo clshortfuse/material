@@ -99,6 +99,10 @@ $swift-ease-in-out-duration: 0.5s !default;
 $swift-ease-in-out-timing-function: cubic-bezier(0.35, 0, 0.25, 1) !default;
 $swift-ease-in-out: all $swift-ease-in-out-duration $swift-ease-in-out-timing-function !default;
 
+$swift-linear-duration: 0.08s !default;
+$swift-linear-timing-function: linear !default;
+$swift-linear: all $swift-linear-duration $swift-linear-timing-function !default;
+
 // Fab Buttons (shared between buttons.scss and fab*.scss)
 // -------------------------------------------
 $button-fab-width: rem(5.600) !default;
@@ -527,8 +531,10 @@ input {
 *  References:
 *  1) https://scotch.io/tutorials/a-visual-guide-to-css3-flexbox-properties#flex
 *  2) https://css-tricks.com/almanac/properties/f/flex/
-*  3) https://github.com/philipwalton/flexbugs#3-min-height-on-a-flex-container-wont-apply-to-its-flex-items
-*  4) http://godban.com.ua/projects/flexgrid
+*  3) https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+*  4) https://github.com/philipwalton/flexbugs#3-min-height-on-a-flex-container-wont-apply-to-its-flex-items
+*  5) http://godban.com.ua/projects/flexgrid
+*
 *
 */
 
@@ -542,180 +548,153 @@ input {
 }
 
 
+@mixin flex-order-for-name($sizes:null) {
+  @if $sizes == null {
+    $sizes : '';
 
-@mixin flex-order-for-name() {
-  $sizes : '', sm, gt-sm, md, gt-md, lg, gt-lg;
+    .flex-order {
+     order : 0;
+    }
+  }
 
-  //  .flex-order--1, .flex-order-sm--1, .flex-order-gt-sm--1, .flex-order-md--1, .flex-order-gt-md--1, .flex-order-lg--1, .flex-order-gt-lg--1 {
-  //    order: -1;
-  //  }
-  //
-  //  .flex-order-0, .flex-order-sm-0, .flex-order-gt-sm-0, .flex-order-md-0, .flex-order-gt-md-0, .flex-order-lg-0, .flex-order-gt-lg-0 {
-  //    order: 0;
-  //  }
-  //
-  //  .flex-order-1, .flex-order-sm-1, .flex-order-gt-sm-1, .flex-order-md-1, .flex-order-gt-md-1, .flex-order-lg-1, .flex-order-gt-lg-1 {
-  //    order: 1;
-  //  }
-  //
-  $offsets : '.flex-order, ';
-  @for $i from -9 through 9 {
+  @for $i from 0 through 19 {
+    $order : '';
+    $suffix : '';
+
     @each $s in $sizes {
-      @if $s != '' {
-        $s : '#{$s}-#{$i}';
-      } @else {
-        $s : '#{$i}';
-      }
-      $offsets : $offsets + '.flex-order-#{$s}, ';
+      @if $s != '' { $suffix : '#{$s}-#{$i}'; }
+      @else        { $suffix : '#{$i}';       }
 
-      $s : '';
+      $order : '.flex-order-#{$suffix}';
+    }
+
+    #{$order} {
+      order: #{$i};
+    }
+  }
+}
+@mixin offset-for-name($sizes:null) {
+  @if $sizes == null { $sizes : ''; }
+
+  @for $i from 0 through 19 {
+    $offsets : '';
+    $suffix : '';
+
+    @each $s in $sizes {
+      @if $s != '' { $suffix : '#{$s}-#{$i * 5}'; }
+      @else        { $suffix : '#{$i * 5}';       }
+
+      $offsets : '.offset-#{$suffix}, .flex-offset-#{$suffix}';
     }
 
     #{$offsets} {
-      order: #{$i};
+      margin-left: #{$i * 5 + '%'};
+    }
+  }
+
+  @each $i in 33, 34 {
+    $offsets : '';
+    $suffix : '';
+
+    @each $s in $sizes {
+      @if $s != '' {  $suffix : '#{$s}-#{$i}';   }
+      @else        {  $suffix : '#{$i}';         }
+
+      $offsets : '.offset-#{$suffix}, .flex-offset-#{$suffix} ';
     }
 
+    #{$offsets} {
+      margin-left: #{$i+'%'};
+    }
+  }
+
+  @each $i in 66, 67 {
     $offsets : '';
+    $suffix : '';
+
+    @each $s in $sizes {
+      @if $s != '' {  $suffix : '#{$s}-#{$i}';   }
+      @else        {  $suffix : '#{$i}';         }
+
+      $offsets : '.offset-#{$suffix}, .flex-offset-#{$suffix} ';
+    }
+
+    #{$offsets} {
+      margin-left: #{$i+'%'};
+    }
   }
 }
 
 @mixin layout-for-name($name: null) {
-  @if $name == null {
-    .layout {
-      box-sizing: border-box;
-      display: -webkit-box;
-      display: -webkit-flex;
-      display: -moz-box;
-      display: -moz-flex;
-      display: -ms-flexbox;
-      display: flex;
-    }
+  @if $name == null { $name : '';          }
+  @if $name != ''   { $name : '-#{$name}'; }
 
-    .layout-column {
-      flex-direction: column;
-      -webkit-flex-direction: column;
-    }
-
-    .layout-row {
-      flex-direction: row;
-      -webkit-flex-direction: row;
-    }
+  .layout#{$name}, .layout#{$name}-column, .layout#{$name}-row, {
+    box-sizing: border-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: flex;
   }
-
-  @if $name != null {
-    .layout-#{$name} {
-      box-sizing: border-box;
-      display: -webkit-box;
-      display: -webkit-flex;
-      display: -moz-box;
-      display: -ms-flexbox;
-      display: flex;
-    }
-    .layout-#{$name}-column,
-    .md-css-only [layout-#{$name}=column] {
-      flex-direction: column;
-    }
-    .layout-#{$name}-row,
-    .md-css-only [layout-#{$name}=row] {
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-  }
-}
-
-@mixin offset-for-name($name: null) {
-  $offsetName: 'offset';
-  @if $name != null {
-    $offsetName: 'offset-#{$name}';
-  }
-  @for $i from 1 through 19 {
-    .#{$offsetName}-#{$i * 5},
-    .md-css-only [#{$offsetName}="#{$i * 5}"]
-    {
-      margin-left: #{$i * 5 + '%'};
-    }
-  }
-  .#{$offsetName}-33, .#{$offsetName}-34 {
-    margin-left: 34%;
-  }
-  .#{$offsetName}-66, .#{$offsetName}-67 {
-    margin-left: 66%;
-  }
+  .layout#{$name}-column {  flex-direction: column;  }
+  .layout#{$name}-row    {  flex-direction: row;     }
 }
 
 @mixin flex-properties-for-name($name: null) {
   $flexName: 'flex';
   @if $name != null {
     $flexName: 'flex-#{$name}';
+    $name : '-#{$name}';
+  } @else {
+    $name : '';
   }
 
-  .#{$flexName} {
-    box-sizing: border-box;
-    flex: 1;
-  }
-  
-  @if ( $name == 'flex' ) {
-    .flex, .flex-initial {
-      box-sizing: border-box;
-      flex: 0 1 auto;
-    }
-
-
-    .flex-1 {
-      box-sizing: border-box;
-      flex: 1 1 0%;
-    }
-  
-    .flex-auto {
-      box-sizing: border-box;
-      flex: 1 1 auto;
-    }
-  }
+  .#{$flexName}             { flex: 1;         box-sizing: border-box; }  // === flex: 1 1 0%;
+  .#{$flexName}-grow        { flex: 1 1 100%;  box-sizing: border-box; }
+  .#{$flexName}-initial     { flex: 0 1 auto;  box-sizing: border-box; }
+  .#{$flexName}-auto        { flex: 1 1 auto;  box-sizing: border-box; }
+  .#{$flexName}-none        { flex: 0 0 auto;  box-sizing: border-box; }
 
   // (1-20) * 5 = 0-100%
-  @for $i from 1 through 20 {
-    .#{$flexName}-#{$i * 5},
-    .md-css-only [#{$flexName}="#{$i * 5}"]
-    {
-      flex: 0 0 #{$i * 5 + '%'};
-    }
-    .layout-#{$name}-row > .#{$flexName}-#{$i * 5},
-    .md-css-only [layout="row"] > .md-css-only [#{$flexName}="#{$i * 5}"]
-    {
-      max-width: #{$i * 5 + '%'};
+  @for $i from 0 through 20 {
+    $value : #{$i * 5 + '%'};
+
+    .#{$flexName}-#{$i * 5} {
+      flex: 1 1 #{$value};
+      max-width: #{$value};
       max-height: 100%;
+      box-sizing: border-box;
     }
 
-    .layout-#{$name}-column > .#{$flexName}-#{$i * 5},
-    .md-css-only [layout="column"] > .md-css-only [#{$flexName}="#{$i * 5}"]
-    {
-      max-height: #{$i * 5 + '%'};
+    .layout-row > .#{$flexName}-#{$i * 5},
+    .layout#{$name}-row > .#{$flexName}-#{$i * 5} {
+      flex: 1 1 #{$value};
+      max-width: #{$value};
+      max-height: 100%;
+      box-sizing: border-box;
+    }
+
+    .layout-column > .#{$flexName}-#{$i * 5},
+    .layout#{$name}-column > .#{$flexName}-#{$i * 5} {
+      flex: 1 1 #{$value};
       max-width: 100%;
+      max-height: #{$value};
+      box-sizing: border-box;
     }
   }
 
-  .#{$flexName}-33, .#{$flexName}-34
-  {
-    flex: 0 0 33%;
-    max-width: 33%;
-    max-height: 100%;
+  .layout-row, .layout#{$name}-row {
+    > .#{$flexName}-33   , > .#{$flexName}-33     {  flex: 1 1 33%;  max-width: 33%;  max-height: 100%; box-sizing: border-box; }
+    > .#{$flexName}-34   , > .#{$flexName}-34     {  flex: 1 1 34%;  max-width: 34%;  max-height: 100%; box-sizing: border-box; }
+    > .#{$flexName}-66   , > .#{$flexName}-66     {  flex: 1 1 66%;  max-width: 66%;  max-height: 100%; box-sizing: border-box; }
+    > .#{$flexName}-67   , > .#{$flexName}-67     {  flex: 1 1 67%;  max-width: 67%;  max-height: 100%; box-sizing: border-box; }
   }
-
-  .#{$flexName}-66, .#{$flexName}-67
-  {
-    flex: 0 0 67%;
-    max-width: 67%;
-    max-height: 100%;
-
-  }
-
-  .layout-#{$name}-row {
-    > .#{$flexName}-33, > .#{$flexName}-34 { max-width: 33%; max-height: 100%;}
-    > .#{$flexName}-66, > .#{$flexName}-67 { max-width: 67%; max-height: 100%;  }
-  }
-  .layout-#{$name}-column {
-    > .#{$flexName}-33, > .#{$flexName}-34 { max-height: 33%; max-width: 100%; }
-    > .#{$flexName}-66, > .#{$flexName}-67 { max-height: 67%; max-width: 100%;}
+  .layout-column, .layout#{$name}-column {
+    > .#{$flexName}-33   , > .#{$flexName}-33     {  flex: 1 1 33%;  max-width: 100%;  max-height: 33%; box-sizing: border-box; }
+    > .#{$flexName}-34   , > .#{$flexName}-34     {  flex: 1 1 34%;  max-width: 100%;  max-height: 34%; box-sizing: border-box; }
+    > .#{$flexName}-66   , > .#{$flexName}-66     {  flex: 1 1 66%;  max-width: 100%;  max-height: 66%; box-sizing: border-box; }
+    > .#{$flexName}-67   , > .#{$flexName}-67     {  flex: 1 1 67%;  max-width: 100%;  max-height: 67%; box-sizing: border-box; }
   }
 }
 
@@ -737,10 +716,6 @@ input {
   .#{$name}-center-center,
   .#{$name}-center-start,
   .#{$name}-center-end,
-  .md-css-only [#{$name}="center"],
-  .md-css-only [#{$name}="center center"],
-  .md-css-only [#{$name}="center start"],
-  .md-css-only [#{$name}="center end"]
   {
     justify-content: center;
   }
@@ -750,10 +725,6 @@ input {
   .#{$name}-end-center,
   .#{$name}-end-start,
   .#{$name}-end-end,
-  .md-css-only [#{$name}="end"], //stretch
-  .md-css-only [#{$name}="end center"],
-  .md-css-only [#{$name}="end start"],
-  .md-css-only [#{$name}="end end"]
   {
     justify-content: flex-end;
   }
@@ -763,10 +734,6 @@ input {
   .#{$name}-space-around-center,
   .#{$name}-space-around-start,
   .#{$name}-space-around-end,
-  .md-css-only [#{$name}="space-around"], //stretch
-  .md-css-only [#{$name}="space-around center"],
-  .md-css-only [#{$name}="space-around start"],
-  .md-css-only [#{$name}="space-around end"]
   {
     justify-content: space-around;
   }
@@ -776,10 +743,6 @@ input {
   .#{$name}-space-between-center,
   .#{$name}-space-between-start,
   .#{$name}-space-between-end,
-  .md-css-only [#{$name}="space-between"], //stretch
-  .md-css-only [#{$name}="space-between center"],
-  .md-css-only [#{$name}="space-between start"],
-  .md-css-only [#{$name}="space-between end"]
   {
     justify-content: space-between;
   }
@@ -796,11 +759,6 @@ input {
   .#{$name}-end-start,
   .#{$name}-space-between-start,
   .#{$name}-space-around-start,
-  .md-css-only [#{$name}="center start"],
-  .md-css-only [#{$name}="start start"],
-  .md-css-only [#{$name}="end start"],
-  .md-css-only [#{$name}="space-between start"],
-  .md-css-only [#{$name}="space-around start"]
   {
     align-items: flex-start;
   }
@@ -811,15 +769,20 @@ input {
   .#{$name}-end-center,
   .#{$name}-space-between-center,
   .#{$name}-space-around-center,
-  .md-css-only [#{$name}="center center"],
-  .md-css-only [#{$name}="start center"],
-  .md-css-only [#{$name}="end center"],
-  .md-css-only [#{$name}="space-between center"],
-  .md-css-only [#{$name}="space-around center"]
   {
     align-items: center;
     max-width: 100%;
+  }
 
+  // Cross Axis Center IE overflow fix
+  .#{$name}-center-center > *,
+  .#{$name}-start-center > *,
+  .#{$name}-end-center > *,
+  .#{$name}-space-between-center > *,
+  .#{$name}-space-around-center > *,
+  {
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   // Cross Axis End
@@ -828,80 +791,57 @@ input {
   .#{$name}-end-end,
   .#{$name}-space-between-end,
   .#{$name}-space-around-end,
-  .md-css-only [#{$name}="center end"],
-  .md-css-only [#{$name}="start end"],
-  .md-css-only [#{$name}="end end"],
-  .md-css-only [#{$name}="space-between end"],
-  .md-css-only [#{$name}="space-around end"]
   {
     align-items: flex-end;
   }
-
 }
 
 @mixin layout-padding-margin() {
 
-  .layout-padding > .flex-sm,
-  .layout-padding > .flex-lt-md,
-  .md-css-only [layout-padding] > [flex-sm],
-  .md-css-only [layout-padding] > [flex-lt-md]
-  {
+  .layout-padding > .flex-sm,   .layout-padding > .flex-lt-md {
     padding: $layout-gutter-width / 4;
   }
-
   .layout-padding,
   .layout-padding > .flex,
   .layout-padding > .flex-gt-sm,
   .layout-padding > .flex-md,
-  .layout-padding > .flex-lt-lg,
-  .md-css-only [layout-padding],
-  .md-css-only [layout-padding] > .md-css-only [flex],
-  .md-css-only [layout-padding] > .md-css-only [flex-gt-sm],
-  .md-css-only [layout-padding] > .md-css-only [flex-md],
-  .md-css-only [layout-padding] > .md-css-only [flex-lt-lg]
+  .layout-padding > .flex-lt-lg
   {
     padding: $layout-gutter-width / 2;
   }
   .layout-padding > .flex-gt-md,
-  .layout-padding > .flex-lg,
-  .md-css-only [layout-padding] > .md-css-only [flex-gt-md],
-  .md-css-only [layout-padding] > .md-css-only [flex-lg]
+  .layout-padding > .flex-lg
   {
     padding: $layout-gutter-width / 1;
   }
 
   .layout-margin > .flex-sm,
-  .layout-margin > .flex-lt-md,
-  .md-css-only [layout-margin] >  .md-css-only [flex-sm],
-  .md-css-only [layout-margin] >  .md-css-only [flex-lt-md]
+  .layout-margin > .flex-lt-md
   {
     margin: $layout-gutter-width / 4;
   }
 
   .layout-margin,
-  .layout-margin > .flex,
-  .layout-margin > .flex-gt-sm,
-  .layout-margin > .flex-md,
-  .layout-margin > .flex-lt-lg,
-  .md-css-only [layout-margin],
-  .md-css-only [layout-margin] >  .md-css-only [flex],
-  .md-css-only [layout-margin] >  .md-css-only [flex-gt-sm],
-  .md-css-only [layout-margin] >  .md-css-only [flex-md],
-  .md-css-only [layout-margin] >  .md-css-only [flex-lt-lg]
+  .layout-margin  > .flex,
+  .layout-margin  > .flex-gt-sm,
+  .layout-margin  > .flex-md,
+  .layout-margin  > .flex-lt-lg
   {
     margin: $layout-gutter-width / 2;
   }
 
-  .layout-margin > .flex-gt-md,
-  .layout-margin > .flex-lg,
-  .md-css-only [layout-margin] >  .md-css-only [flex-gt-md],
-  .md-css-only [layout-margin] >  .md-css-only [flex-lg]
+  .layout-margin  > .flex-gt-md,
+  .layout-margin  > .flex-lg
   {
     margin: $layout-gutter-width / 1;
   }
 
   .layout-wrap {
     flex-wrap: wrap;
+  }
+
+  .layout-nowrap {
+      flex-wrap: nowrap;
   }
 
   .layout-fill {
@@ -912,16 +852,22 @@ input {
   }
 }
 
+@mixin layouts_for_breakpoint($name:null) {
+    @include flex-order-for-name($name);
+    @include offset-for-name($name);
+    @include layout-align-for-name($name);
+
+    @include flex-properties-for-name($name);
+    @include layout-for-name($name);
+}
+
 /*
  *  Apply Mixins to create Layout/Flexbox styles
  *
  */
 
-@include layout-for-name();
-@include flex-properties-for-name();
-@include layout-align-for-name();
-@include flex-order-for-name();
-@include offset-for-name();
+
+@include layouts_for_breakpoint();
 @include layout-padding-margin();
 
 
@@ -939,73 +885,64 @@ input {
  */
 
 
-// SMALL SCREEN
+
 @media (max-width: $layout-breakpoint-sm - 1) {
+  // SMALL SCREEN
   .hide-sm, .hide {
     &:not(.show-sm):not(.show) {
       display: none;
     }
   }
-
-  @include layout-for-name(sm);
-  @include flex-properties-for-name(sm);
+  @include layouts_for_breakpoint(sm);
 }
 
-// BIGGER THAN SMALL SCREEN
 @media (min-width: $layout-breakpoint-sm) {
-  @include layout-for-name(gt-sm);
-  @include flex-properties-for-name(gt-sm);
+  // BIGGER THAN SMALL SCREEN
+  @include layouts_for_breakpoint(gt-sm);
+
 }
 
-// MEDIUM SCREEN
 @media (min-width: $layout-breakpoint-sm) and (max-width: $layout-breakpoint-md - 1) {
-  .hide, .hide-gt-sm, {
+  // MEDIUM SCREEN
+  .hide, .hide-gt-sm {
     &:not(.show-gt-sm):not(.show-md):not(.show) {
       display: none;
     }
   }
-
   .hide-md:not(.show-md):not(.show) {
     display: none;
   }
-
-
-  @include layout-for-name(md);
-  @include flex-properties-for-name(md);
+  @include layouts_for_breakpoint(md);
 }
 
-// BIGGER THAN MEDIUM SCREEN
 @media (min-width: $layout-breakpoint-md) {
-  @include layout-for-name(gt-md);
-  @include flex-properties-for-name(gt-md);
+  // BIGGER THAN MEDIUM SCREEN
+  @include layouts_for_breakpoint(gt-md);
 }
 
-// LARGE SCREEN
 @media (min-width: $layout-breakpoint-md) and (max-width: $layout-breakpoint-lg - 1) {
+  // LARGE SCREEN
   .hide, .hide-gt-sm, .hide-gt-md {
-    &:not(.show-gt-sm):not(.show-gt-md):not(.show-lg):not(.show) {
+      &:not(.show-gt-sm):not(.show-gt-md):not(.show-lg):not(.show) {
+        display: none;
+      }
+    }
+    .hide-lg:not(.show-lg):not(.show) {
       display: none;
     }
-  }
-  .hide-lg:not(.show-lg):not(.show) {
-    display: none;
-  }
 
-  @include layout-for-name(lg);
-  @include flex-properties-for-name(lg);
+  @include layouts_for_breakpoint(lg);
 }
 
-
-// BIGGER THAN LARGE SCREEN
 @media (min-width: $layout-breakpoint-lg) {
+  // BIGGER THAN LARGE SCREEN
   .hide-gt-sm, .hide-gt-md, .hide-gt-lg, .hide {
     &:not(.show-gt-sm):not(.show-gt-md):not(.show-gt-lg):not(.show) {
       display: none;
     }
   }
 
-  @include layout-for-name(gt-lg);
-  @include flex-properties-for-name(gt-lg);
+  @include layouts_for_breakpoint(gt-lg);
 }
 
 $autocomplete-option-height: 48px;
@@ -1026,6 +963,7 @@ $input-error-height: 24px !default;
     opacity: 0;
   }
 }
+
 @keyframes md-autocomplete-list-in {
   0% {
     opacity: 0;
@@ -1041,6 +979,7 @@ $input-error-height: 24px !default;
     height: 40px;
   }
 }
+
 md-autocomplete {
   border-radius: 2px;
   display: block;
@@ -1088,26 +1027,34 @@ md-autocomplete {
     &.md-menu-showing {
       z-index: $z-index-backdrop + 1;
     }
-    md-progress-linear .md-mode-indeterminate {
+    md-progress-linear {
       position: absolute;
-      top: 20px; left: 0; width: 100%;
-      height: 3px;
-      transition: none;
+      bottom: -2px;
+      left: 0;
 
-      .md-container {
-        transition: none;
+      .md-mode-indeterminate {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
         height: 3px;
-      }
-      &.ng-enter {
-        transition: opacity 0.15s linear;
-        &.ng-enter-active {
-          opacity: 1;
+        transition: none;
+
+        .md-container {
+          transition: none;
+          height: 3px;
         }
-      }
-      &.ng-leave {
-        transition: opacity 0.15s linear;
-        &.ng-leave-active {
-          opacity: 0;
+        &.ng-enter {
+          transition: opacity 0.15s linear;
+          &.ng-enter-active {
+            opacity: 1;
+          }
+        }
+        &.ng-leave {
+          transition: opacity 0.15s linear;
+          &.ng-leave-active {
+            opacity: 0;
+          }
         }
       }
     }
@@ -1194,12 +1141,12 @@ md-autocomplete {
   max-height: 41px * 5.5;
   z-index: $z-index-tooltip;
 }
+
 .md-autocomplete-suggestions {
   margin: 0;
   list-style: none;
   padding: 0;
   li {
-    cursor: pointer;
     font-size: 14px;
     overflow: hidden;
     padding: 0 15px;
@@ -1212,6 +1159,10 @@ md-autocomplete {
 
     &:focus {
       outline: none;
+    }
+
+    &:not(.md-not-found-wrapper) {
+      cursor: pointer;
     }
   }
 }
@@ -1489,6 +1440,11 @@ $icon-button-height: rem(4.800) !default;
 $icon-button-width: rem(4.800) !default;
 $icon-button-margin: rem(0.600) !default;
 
+// Fix issue causing buttons in Firefox to be 2px bigger than they should
+button.md-button::-moz-focus-inner {
+  border: 0;
+}
+
 .md-button {
   border-radius: $button-border-radius;
   box-sizing: border-box;
@@ -1705,12 +1661,17 @@ md-card {
 
   > img,
   > :not(md-card-content) img {
+    display: flex;
+    flex: 0 0 auto;
     width: 100%;
+    height: auto;
   }
 
   md-card-content {
+    display: block;
     padding: $card-padding;
   }
+
   .md-actions {
     margin: 0;
 
@@ -1722,6 +1683,7 @@ md-card {
     }
   }
   md-card-footer {
+    margin-top: auto;
     padding: $card-padding;
   }
 }
@@ -2491,10 +2453,14 @@ md-dialog {
     flex-direction: column;
     overflow: auto;
   }
+
+  .md-dialog-content {
+    padding: $dialog-padding;
+  }
+
   md-dialog-content {
     order: 1;
     flex-direction: column;
-    padding: $dialog-padding;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
 
@@ -2575,8 +2541,27 @@ md-fab-speed-dial {
   display: flex;
   align-items: center;
 
-  // Include the top/left/bottom/right fab positions
+  // Include the top/left/bottom/right fab positions and set the z-index for absolute positioning
   @include fab-all-positions();
+  z-index: $z-index-fab;
+
+  // Allow users to enable/disable hovering over the entire speed dial (i.e. the empty space where
+  // items will eventually appear)
+  &:not(.md-hover-full) {
+    // Turn off pointer events when closed
+    pointer-events: none;
+
+    md-fab-trigger, .md-fab-action-item {
+      // Always make the trigger and action items always have pointer events (the tooltip looks
+      // for the first parent with pointer-events, so we must set this for tooltips to work)
+      pointer-events: auto;
+    }
+
+    &.md-is-open {
+      // Turn on pointer events when open
+      pointer-events: auto;
+    }
+  }
 
   .md-css-variables {
     z-index: $z-index-fab;
@@ -2667,7 +2652,7 @@ md-fab-speed-dial {
   &.md-scale {
     .md-fab-action-item {
       opacity: 0;
-      transform: scale(0);
+      transform: scale(0.1);
       transition: $swift-ease-in;
 
       // Make the scale animation a bit faster since we are delaying each item
@@ -3078,7 +3063,7 @@ md-input-container {
   .md-input {
     order: 2;
     display: block;
-    margin-top: auto;
+    margin-top: 0;
 
     background: none;
     padding-top: $input-padding-top;
@@ -3089,6 +3074,7 @@ md-input-container {
     line-height: $input-line-height;
     -ms-flex-preferred-size: $input-line-height; //IE fix
     border-radius: 0;
+    border-style: solid; // Firefox fix
 
     // Fix number inputs in Firefox to be full-width
     width: auto;
@@ -3107,9 +3093,9 @@ md-input-container {
   }
 
   .md-char-counter {
-    position: relative;
-    text-align: right;
-    order: 3;
+    position: absolute;
+    right: $input-container-padding;
+    bottom: 7px;
   }
 
   ng-messages, data-ng-messages, x-ng-messages,
@@ -3122,6 +3108,7 @@ md-input-container {
       position: absolute;
       top: 0;
       right: 0;
+      bottom: auto;
     }
   }
 
@@ -3248,6 +3235,17 @@ md-input-container.md-icon-float {
 
 }
 
+md-input-container.md-icon-right {
+  input {
+    margin-right: $icon-offset;
+    + md-icon {
+      top: 26px;
+      right: 2px;
+      margin-right: 0;
+    }
+  }
+}
+
 @media screen and (-ms-high-contrast: active) {
   md-input-container.md-default-theme > md-icon {
     fill: #fff;
@@ -3295,6 +3293,9 @@ md-list {
 }
 
 md-list-item {
+  // Ensure nested dividers are properly positioned
+  position: relative;
+
   &.md-proxy-focus.md-focused .md-no-style {
     transition: background-color 0.15s linear;
   }
@@ -3302,7 +3303,7 @@ md-list-item {
   .md-no-style {
     position: relative;
     padding: $list-item-padding-vertical $list-item-padding-horizontal;
-    flex: 1;
+    flex: 1 1 auto;
     
     &.md-button {
       font-size: inherit;
@@ -3343,12 +3344,13 @@ md-list-item, md-list-item .md-list-item-inner {
   justify-content: flex-start;
   align-items: center;
   min-height: $list-item-height;
+  height:auto;
 
   // Layout for controls in primary or secondary divs, or auto-infered first child
-  & > div.md-primary > md-icon,
-  & > div.md-secondary > md-icon,
-  & > md-icon:first-child, 
-  > md-icon.md-secondary {
+  & > div.md-primary > md-icon:not(.md-avatar-icon),
+  & > div.md-secondary > md-icon:not(.md-avatar-icon),
+  & > md-icon:first-child:not(.md-avatar-icon),
+  > md-icon.md-secondary:not(.md-avatar-icon) {
     width: $list-item-primary-icon-width;
     margin-top: 16px;
     margin-bottom: 12px;
@@ -3362,7 +3364,7 @@ md-list-item, md-list-item .md-list-item-inner {
     .md-label { display: none; }
   }
 
-  & > md-icon:first-child {
+  & > md-icon:first-child:not(.md-avatar-icon) {
     margin-right: $list-item-primary-width - $list-item-primary-icon-width;
   }
   & > md-checkbox:first-child {
@@ -3370,14 +3372,19 @@ md-list-item, md-list-item .md-list-item-inner {
     margin-left: 3px;
     margin-right: 29px;
   }
-  & > .md-avatar:first-child {
-    width: $list-item-primary-avatar-width;
-    height: $list-item-primary-avatar-width;
+  & > .md-avatar, .md-avatar-icon {
     margin-top: $baseline-grid;
     margin-bottom: $baseline-grid;
     margin-right: $list-item-primary-width - $list-item-primary-avatar-width;
     border-radius: 50%;
     box-sizing: content-box;
+  }
+  & > .md-avatar {
+    width: $list-item-primary-avatar-width;
+    height: $list-item-primary-avatar-width;
+  }
+  & > .md-avatar-icon {
+    padding: 8px;
   }
 
   md-checkbox.md-secondary,
@@ -3468,8 +3475,13 @@ md-list-item.md-3-line > .md-no-style {
 
 md-list-item.md-2-line,
 md-list-item.md-2-line > .md-no-style {
-  height: $list-item-two-line-height;
-  > .md-avatar:first-child {
+  height:auto;
+  min-height: $list-item-two-line-height;
+  &.md-long-text {
+      margin:1.6em;
+    }
+
+  > .md-avatar, .md-avatar-icon {
     margin-top: $baseline-grid * 1.5;
   }
   > md-icon:first-child {
@@ -3482,9 +3494,15 @@ md-list-item.md-2-line > .md-no-style {
 
 md-list-item.md-3-line,
 md-list-item.md-3-line > .md-no-style {
-  height: $list-item-three-line-height;
-  > md-icon:first-child, 
-  > .md-avatar:first-child {
+  height:auto;
+  min-height: $list-item-three-line-height;
+
+  &.md-long-text {
+    margin:1.6em;
+  }
+
+  > md-icon:first-child,
+  > .md-avatar {
     margin-top: $baseline-grid * 2;
   }
 }
@@ -4266,7 +4284,7 @@ $select-max-visible-options: 5;
 }
 
 md-input-container > md-select {
-  margin: auto 0 0 0;
+  margin: 0;
   order: 2;
 }
 
@@ -4452,7 +4470,6 @@ md-sidenav {
   min-width: $sidenav-default-width;
   max-width: $sidenav-default-width;
   bottom: 0;
-  background-color: white;
   overflow: auto;
 
   ul {
@@ -5051,7 +5068,7 @@ md-switch {
     .md-bar,
     .md-thumb-container,
     .md-thumb {
-      transition: $swift-ease-in-out;
+      transition: $swift-linear;
       transition-property: transform, background-color;
     }
     .md-bar,
@@ -5079,15 +5096,9 @@ $tabs-tab-width: $baseline-grid * 12 !default;
 $tabs-header-height: 48px !default;
 
 @keyframes md-tab-content-hide {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 md-tab-data {
@@ -5111,12 +5122,14 @@ md-tabs {
     min-height: 200 + $tabs-header-height;
   }
   &[md-align-tabs="bottom"] {
+    padding-bottom: $tabs-header-height;
     md-tabs-wrapper {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
       height: $tabs-header-height;
+      z-index: 2;
     }
     md-tabs-content-wrapper {
       top: 0;
@@ -5244,7 +5257,6 @@ md-pagination-wrapper {
   &.md-center-tabs {
     position: relative;
     width: initial;
-    flex: 1;
     margin: 0 auto;
   }
 }
@@ -5385,7 +5397,7 @@ md-toast {
   font-size: 14px;
   cursor: default;
 
-  height:auto;
+  height: 0px;
   max-height: 7*$toast-height;
   max-width: 100%;
 
@@ -5700,37 +5712,14 @@ md-tooltip {
     font-size: $tooltip-fontsize-lg;
   }
 
-  .md-background {
-    position: absolute;
-    border-radius: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 1;
-    &.md-show-add {
-      transition: $swift-ease-out;
-      transform: translate(-50%, -50%) scale(0);
-      opacity: 0;
-    }
-    &.md-show, &.md-show-add-active {
-      transform: translate(-50%, -50%) scale(1);
-      opacity: 1;
-    }
-    &.md-show-remove {
-      transition: $swift-ease-in;
-      &.md-show-remove-active {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-      }
-    }
-  }
   .md-content {
     position: relative;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-
-    background: transparent;
+    transform-origin: center top;
+    transform: scale(0);
     opacity: 0;
-
     height: $tooltip-height-sm;
     line-height: $tooltip-height-sm;
     padding-left: $tooltip-lr-padding-sm;
@@ -5743,14 +5732,19 @@ md-tooltip {
     }
     &.md-show-add {
       transition: $swift-ease-out;
+      transition-duration: .2s;
+      transform: scale(0);
       opacity: 0;
     }
     &.md-show, &.md-show-add-active {
+      transform: scale(1);
       opacity: 1;
     }
     &.md-show-remove {
-      transition: $swift-ease-in;
+      transition: $swift-ease-out;
+      transition-duration: .2s;
       &.md-show-remove-active {
+        transform: scale(0);
         opacity: 0;
       }
     }
@@ -5792,7 +5786,7 @@ $virtual-repeat-scrollbar-width: 16px;
   .md-virtual-repeat-sizer {
     box-sizing: border-box;
     height: 1px;
-    display: inline-block;
+    display: block;
     margin: 0;
     padding: 0;
     width: 1px;
@@ -5804,9 +5798,7 @@ $virtual-repeat-scrollbar-width: 16px;
     margin: 0;
     padding: 0;
     position: absolute;
-    // Leave room for the scroll bar.
-    // TODO: Will probably need to perform measurements at runtime.
-    right: $virtual-repeat-scrollbar-width;
+    right: 0;
     top: 0;
   }
 }
