@@ -136,7 +136,8 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout) {
   };
 
   this.destroy = function() {
-    return $mdMenu.destroy();
+    if ($scope.$mdMenuIsOpen)
+        return $mdMenu.destroy();
   };
 
   // Use the $mdMenu interim element service to close the menu contents
