@@ -17843,8 +17843,7 @@ angular
  */
 
 function MdAutocomplete () {
-  var hasNotFoundTemplate = false;
-
+  
   return {
     controller:   'MdAutocompleteCtrl',
     controllerAs: '$mdAutocompleteCtrl',
@@ -17870,7 +17869,7 @@ function MdAutocomplete () {
       inputId:        '@?mdInputId'
     },
     link: function(scope, element, attrs, controller) {
-      controller.hasNotFound = hasNotFoundTemplate;
+      controller.hasNotFound = !!attrs.hasNotFoundTemplate;
     },
     template:     function (element, attr) {
       var noItemsTemplate = getNoItemsTemplate(),
@@ -17879,7 +17878,7 @@ function MdAutocomplete () {
           tabindex        = attr.tabindex;
 
       if (noItemsTemplate) {
-        hasNotFoundTemplate = true;
+        attr.hasNotFoundTemplate = true;
       }
 
       if (attr.hasOwnProperty('tabindex')) {
