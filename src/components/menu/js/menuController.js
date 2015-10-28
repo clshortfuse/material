@@ -7,7 +7,7 @@ angular
 /**
  * @ngInject
  */
-function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout) {
+function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout, $q) {
 
   var menuContainer;
   var self = this;
@@ -138,6 +138,8 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout) {
   this.destroy = function() {
     if ($scope.$mdMenuIsOpen)
         return $mdMenu.destroy();
+    else
+        return $q.when(false);
   };
 
   // Use the $mdMenu interim element service to close the menu contents
