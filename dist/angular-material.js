@@ -2,7 +2,7 @@
  * Angular Material Design
  * https://github.com/angular/material
  * @license MIT
- * v0.12.0-rc1
+ * v1.0.0-rc1
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -3147,8 +3147,10 @@ function InterimElementProvider() {
     return function updateClassFn(newValue) {
       var value = validateAttributeValue(className, newValue || "");
       if ( angular.isDefined(value) ) {
-        element.removeClass(lastClass);
-        lastClass = !value ? className : className + "-" + value.replace(WHITESPACE, "-")
+        if (lastClass) { 
+          element.removeClass(lastClass);
+        }
+        lastClass = !value ? className : className + "-" + value.replace(WHITESPACE, "-");
         element.addClass(lastClass);
       }
     };
@@ -20150,7 +20152,8 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout) {
   };
 
   this.destroy = function() {
-    return $mdMenu.destroy();
+    if ($scope.$mdMenuIsOpen)
+        return $mdMenu.destroy();
   };
 
   // Use the $mdMenu interim element service to close the menu contents
@@ -22698,4 +22701,4 @@ angular.module("material.core").constant("$MD_THEME_CSS", "md-autocomplete.md-TH
 })();
 
 
-})(window, window.angular);;window.ngMaterial={version:{full: "0.12.0-rc1"}};
+})(window, window.angular);;window.ngMaterial={version:{full: "1.0.0-rc1"}};
