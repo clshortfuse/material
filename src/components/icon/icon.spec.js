@@ -29,7 +29,7 @@ describe('mdIcon directive', function() {
         el = make( '<md-icon md-font-icon="android"></md-icon>');
 
         expect(el.html()).toEqual('');
-        expect( clean(el.attr('class')) ).toEqual("md-font android");
+        expect( clean(el.attr('class')) ).toEqual("md-font android material-icons");
 
       });
 
@@ -47,7 +47,13 @@ describe('mdIcon directive', function() {
         expect(el.html()).toEqual('');
       });
 
-      it('',function() {
+      it('should apply default fontset "material-icons" when not specified.',function() {
+        $scope.font = {
+          name: 'icon-home',
+          color: "#777",
+          size: 48
+        };
+
         el = make('\
           <md-icon \
               md-font-icon="{{ font.name }}" \
@@ -56,20 +62,12 @@ describe('mdIcon directive', function() {
           </md-icon> \
         ');
 
-        $scope.$apply(function(){
-            $scope.font = {
-              name: 'icon-home',
-              color: "#777",
-              size: 48
-            };
-        });
-
         expect(el.attr('md-font-icon')).toBe($scope.font.name);
         expect(el.hasClass('step')).toBe(true);
         expect(el.hasClass('material-icons')).toBe(true);
         expect(el.attr('aria-label')).toBe($scope.font.name + $scope.font.size);
         expect(el.attr('role')).toBe('img');
-      })
+      });
 
     });
 
@@ -146,9 +144,9 @@ describe('mdIcon directive', function() {
         el = make( '<md-icon></md-icon>');
         expect( clean(el.attr('class')) ).toEqual("fa");
 
-        el = make( '<md-icon>apple</md-icon>');
+        el = make( '<md-icon md-font-icon="fa-apple">apple</md-icon>');
         expect(el.text()).toEqual('apple');
-        expect( clean(el.attr('class')) ).toEqual("fa");
+        expect( clean(el.attr('class')) ).toEqual("md-font fa-apple fa");
 
       });
 
@@ -175,22 +173,32 @@ describe('mdIcon directive', function() {
       var $q;
 
       module(function($provide) {
-        $provide.value('$mdIcon', function $mdIconMock(id) {
-
-              function getIcon(id) {
-                switch(id) {
-                  case 'android'      : return '<svg><g id="android"></g></svg>';
-                  case 'cake'         : return '<svg><g id="cake"></g></svg>';
-                  case 'android.svg'  : return '<svg><g id="android"></g></svg>';
-                  case 'cake.svg'     : return '<svg><g id="cake"></g></svg>';
-                  case 'image:android': return '';
-                }
+        var $mdIconMock = function(id) {
+          return {
+            then: function(fn) {
+              switch(id) {
+                case 'android'          : fn('<svg><g id="android"></g></svg>');
+                  break;
+                case 'cake'             : fn('<svg><g id="cake"></g></svg>');
+                  break;
+                case 'android.svg'      : fn('<svg><g id="android"></g></svg>');
+                  break;
+                case 'cake.svg'         : fn('<svg><g id="cake"></g></svg>');
+                  break;
+                case 'image:android'    : fn('');
+                  break;
+                default                 :
+                  if (/^data:/.test(id)) {
+                    fn(window.atob(id.split(',')[1]));
+                  }
               }
-
-            return $q(function(resolve){
-               resolve(getIcon(id));
-            });
-          });
+            }
+          }
+        };
+        $mdIconMock.fontSet = function() {
+          return 'material-icons';
+        };
+        $provide.value('$mdIcon', $mdIconMock);
       });
 
       inject(function($rootScope, _$compile_, _$q_){
@@ -241,6 +249,17 @@ describe('mdIcon directive', function() {
         expect(el.html()).toEqual('');
       }));
 
+      describe('with a data URL', function() {
+        it('should set mdSvgSrc from a function expression', inject(function() {
+          var svgData = '<svg><g><circle r="50" cx="100" cy="100"></circle></g></svg>';
+          $scope.getData = function() {
+            return 'data:image/svg+xml;base64,' + window.btoa(svgData);
+          }
+          el = make('<md-icon md-svg-src="{{ getData() }}"></md-icon>');
+          $scope.$digest();
+          expect(el[0].innerHTML).toEqual(svgData);
+        }));
+      })
     });
 
     describe('with ARIA support', function() {
@@ -420,6 +439,29 @@ describe('mdIcon service', function() {
         $scope.$digest();
       });
 
+      describe('and the URL is a data URL', function() {
+        var svgData = '<svg><g><circle r="50" cx="100" cy="100"></circle></g></svg>';
+
+        describe('and the data is base64 encoded', function() {
+          it('should return correct SVG markup', function() {
+            var data = 'data:image/svg+xml;base64,' + btoa(svgData);
+            $mdIcon(data).then(function(el) {
+              expect(el.outerHTML).toEqual( updateDefaults(svgData) );
+            })
+            $scope.$digest();
+          });
+        });
+
+        describe('and the data is un-encoded', function() {
+          it('should return correct SVG markup', function() {
+            var data = 'data:image/svg+xml,' + svgData;
+            $mdIcon(data).then(function(el) {
+              expect(el.outerHTML).toEqual( updateDefaults(svgData) );
+            })
+            $scope.$digest();
+          });
+        });
+      });
     });
 
     describe('icon set URL is not found', function() {
@@ -465,8 +507,14 @@ describe('mdIcon service', function() {
     });
   });
 
+
   function updateDefaults(svg) {
     svg = angular.element(svg)[0];
+
+    svg.removeAttribute('id');
+    angular.forEach(svg.querySelectorAll('[id]'), function(item) {
+      item.removeAttribute('id');
+    });
 
     angular.forEach({
       'xmlns' : 'http://www.w3.org/2000/svg',
@@ -474,16 +522,10 @@ describe('mdIcon service', function() {
       'height': '100%',
       'width' : '100%',
       'preserveAspectRatio': 'xMidYMid meet',
-      'viewBox' : svg.getAttribute('viewBox') || '0 0 24 24'
+      'viewBox' : svg.getAttribute('viewBox') || '0 0 24 24',
+      'focusable': false
     }, function(val, attr) {
       svg.setAttribute(attr, val);
-    }, this);
-
-    angular.forEach({
-      'pointer-events' : 'none',
-      'display' : 'block'
-    }, function(val, style) {
-      svg.style[style] = val;
     }, this);
 
     return svg.outerHTML;
