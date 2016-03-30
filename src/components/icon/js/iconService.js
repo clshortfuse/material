@@ -12,7 +12,7 @@
     * icons and icon sets to be pre-registered and associated with source URLs **before** the `<md-icon />`
     * directives are compiled.
     *
-    * If using font-icons, the developer is repsonsible for loading the fonts.
+    * If using font-icons, the developer is responsible for loading the fonts.
     *
     * If using SVGs, loading of the actual svg files are deferred to on-demand requests and are loaded
     * internally by the `$mdIcon` service using the `$http` service. When an SVG is requested by name/ID,
@@ -104,7 +104,7 @@
     * @param {string} id Icon name/id used to register the iconset
     * @param {string} url specifies the external location for the data file. Used internally by `$http` to load the
     * data or as part of the lookup in `$templateCache` if pre-loading was configured.
-    * @param {number=} viewBoxSize Sets the width and height of the viewBox of all icons in the set. 
+    * @param {number=} viewBoxSize Sets the width and height of the viewBox of all icons in the set.
     * It is ignored for icons with an existing viewBox. All icons in the icon set should be the same size.
     * Default value is 24.
     *
@@ -134,7 +134,7 @@
     *
     * @param {string} url specifies the external location for the data file. Used internally by `$http` to load the
     * data or as part of the lookup in `$templateCache` if pre-loading was configured.
-    * @param {number=} viewBoxSize Sets the width and height of the viewBox of all icons in the set. 
+    * @param {number=} viewBoxSize Sets the width and height of the viewBox of all icons in the set.
     * It is ignored for icons with an existing viewBox. All icons in the icon set should be the same size.
     * Default value is 24.
     *
@@ -247,7 +247,7 @@
      config.defaultViewBoxSize = viewBoxSize;
      return this;
    },
-   
+
    /**
     * Register an alias name associated with a font-icon library style ;
     */
@@ -375,7 +375,8 @@
   /* @ngInject */
  function MdIconService(config, $http, $q, $log, $templateCache) {
    var iconCache = {};
-   var urlRegex = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/i;
+   var urlRegex = /[-\w@:%\+.~#?&//=]{2,}\.[a-z]{2,4}\b(\/[-\w@:%\+.~#?&//=]*)?/i;
+   var dataUrlRegex = /^data:image\/svg\+xml[\s*;\w\-\=]*?(base64)?,(.*)$/i;
 
    Icon.prototype = { clone : cloneSVG, prepare: prepareAndStyle };
    getIcon.fontSet = findRegisteredFontSet;
@@ -392,8 +393,8 @@
      // If already loaded and cached, use a clone of the cached icon.
      // Otherwise either load by URL, or lookup in the registry and then load by URL, and cache.
 
-     if ( iconCache[id]         ) return $q.when( iconCache[id].clone() );
-     if ( urlRegex.test(id)     ) return loadByURL(id).then( cacheIcon(id) );
+     if ( iconCache[id] ) return $q.when( iconCache[id].clone() );
+     if ( urlRegex.test(id) || dataUrlRegex.test(id) ) return loadByURL(id).then( cacheIcon(id) );
      if ( id.indexOf(':') == -1 ) id = '$default:' + id;
 
      var load = config[id] ? loadByID : loadFromIconSet;
@@ -422,8 +423,19 @@
     */
    function cacheIcon( id ) {
 
-     return function updateCache( icon ) {
-       iconCache[id] = isIcon(icon) ? icon : new Icon(icon, config[id]);
+     return function updateCache( _icon ) {
+       var icon = isIcon(_icon) ? _icon : new Icon(_icon, config[id]);
+
+       //clear id attributes to prevent aria issues
+       var elem = icon.element;
+       elem.removeAttribute('id');
+
+       angular.forEach(elem.querySelectorAll('[id]'), function(item) {
+         item.removeAttribute('id');
+       });
+
+       iconCache[id] = icon;
+
 
        return iconCache[id].clone();
      };
@@ -470,11 +482,26 @@
     * Extract the data for later conversion to Icon
     */
    function loadByURL(url) {
-     return $http
-       .get(url, { cache: $templateCache })
-       .then(function(response) {
-         return angular.element('<div>').append(response.data).find('svg')[0];
-       }).catch(announceNotFound);
+     /* Load the icon from embedded data URL. */
+     function loadByDataUrl(url) {
+       var results = dataUrlRegex.exec(url);
+       var isBase64 = /base64/i.test(url);
+       var data = isBase64 ? window.atob(results[2]) : results[2];
+       return $q.when(angular.element(data)[0]);
+     }
+
+     /* Load the icon by URL using HTTP. */
+     function loadByHttpUrl(url) {
+       return $http
+         .get(url, { cache: $templateCache })
+         .then(function(response) {
+           return angular.element('<div>').append(response.data).find('svg')[0];
+         }).catch(announceNotFound);
+     }
+
+     return dataUrlRegex.test(url)
+       ? loadByDataUrl(url)
+       : loadByHttpUrl(url);
    }
 
    /**
@@ -498,7 +525,7 @@
     *  Define the Icon class
     */
    function Icon(el, config) {
-     if (el.tagName != 'svg') {
+     if (el && el.tagName != 'svg') {
        el = angular.element('<svg xmlns="http://www.w3.org/2000/svg">').append(el)[0];
      }
 
@@ -523,16 +550,10 @@
            'height': '100%',
            'width' : '100%',
            'preserveAspectRatio': 'xMidYMid meet',
-           'viewBox' : this.element.getAttribute('viewBox') || ('0 0 ' + viewBoxSize + ' ' + viewBoxSize)
+           'viewBox' : this.element.getAttribute('viewBox') || ('0 0 ' + viewBoxSize + ' ' + viewBoxSize),
+           'focusable': false // Disable IE11s default behavior to make SVGs focusable
          }, function(val, attr) {
            this.element.setAttribute(attr, val);
-         }, this);
-
-         angular.forEach({
-           'pointer-events' : 'none',
-           'display' : 'block'
-         }, function(val, style) {
-           this.element.style[style] = val;
          }, this);
    }
 
@@ -540,6 +561,8 @@
     * Clone the Icon DOM element.
     */
    function cloneSVG(){
+     // If the element or any of its children have a style attribute, then a CSP policy without
+     // 'unsafe-inline' in the style-src directive, will result in a violation.
      return this.element.cloneNode(true);
    }
 
