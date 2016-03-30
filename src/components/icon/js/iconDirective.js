@@ -21,7 +21,7 @@ angular
  * your icons instead of text. Benefits include a straightforward way to bundle everything into a
  * single HTTP request, simple scaling, easy color changing, and more.
  *
- * `md-icon` let's you consume an icon font by letting you reference specific icons in that font
+ * `md-icon` lets you consume an icon font by letting you reference specific icons in that font
  * by name rather than character code.
  *
  * ### SVG
@@ -31,7 +31,7 @@ angular
  *
  * `md-icon` makes it easier to use SVG icons by *inlining* the SVG into an `<svg>` element in the
  * document. The most straightforward way of referencing an SVG icon is via URL, just like a
- * traditional `<img>`. `$mdIconProvider`, as a convenience, let's you _name_ an icon so you can
+ * traditional `<img>`. `$mdIconProvider`, as a convenience, lets you _name_ an icon so you can
  * reference it by name instead of URL throughout your templates.
  *
  * Additionally, you may not want to make separate HTTP requests for every icon, so you can bundle
@@ -44,13 +44,17 @@ angular
  *
  * <ol>
  * <li>Load the font library. e.g.<br/>
- *    &lt;link href="https://fonts.googleapis.com/icon?family=Material+Icons"
- *    rel="stylesheet"&gt;
+ *    `<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+ *    rel="stylesheet">`
  * </li>
- * <li> Use either (a) font-icon class names or (b) font ligatures to render the font glyph by using its textual name</li>
- * <li> Use &lt;md-icon md-font-icon="classname" /&gt; or <br/>
- *     use &lt;md-icon md-font-set="font library classname or alias"&gt; textual_name &lt;/md-icon&gt; or <br/>
- *     use &lt;md-icon md-font-set="font library classname or alias"&gt; numerical_character_reference &lt;/md-icon&gt;
+ * <li>
+ *   Use either (a) font-icon class names or (b) font ligatures to render the font glyph by using
+ *   its textual name
+ * </li>
+ * <li>
+ *   Use `<md-icon md-font-icon="classname" />` or <br/>
+ *   use `<md-icon md-font-set="font library classname or alias"> textual_name </md-icon>` or <br/>
+ *   use `<md-icon md-font-set="font library classname or alias"> numerical_character_reference </md-icon>`
  * </li>
  * </ol>
  *
@@ -100,7 +104,8 @@ angular
  * nor a label on the parent element, a warning will be logged to the console.
  * @param {string=} alt Labels icon for accessibility. If an empty string is provided, icon
  * will be hidden from accessibility layer with `aria-hidden="true"`. If there's no alt on the icon
- * nor a label on the parent element, a warning will be logged to the console. *
+ * nor a label on the parent element, a warning will be logged to the console.
+ *
  * @usage
  * When using SVGs:
  * <hljs lang="html">
@@ -142,7 +147,7 @@ angular
  *  <!-- The class '.material-icons' is auto-added if a style has NOT been specified -->
  *  <md-icon> face </md-icon>
  *  <md-icon md-font-set="material-icons"> face </md-icon>
- *  <md-icon> #xE87C; </md-icon>
+ *  <md-icon> &#xE87C; </md-icon>
  *  <!-- The class '.material-icons' must be manually added if other styles are also specified-->
  *  <md-icon class="material-icons md-light md-48"> face </md-icon>
  * </hljs>
@@ -211,9 +216,11 @@ function mdIconDirective($mdIcon, $mdTheming, $mdAria ) {
 
         element.empty();
         if (attrVal) {
-          $mdIcon(attrVal).then(function(svg) {
-            element.append(svg);
-          });
+          $mdIcon(attrVal)
+            .then(function(svg) {
+              element.empty();
+              element.append(svg);
+            });
         }
 
       });
@@ -230,25 +237,12 @@ function mdIconDirective($mdIcon, $mdTheming, $mdAria ) {
       return false;
     }
 
-    function prepareForFontIcon () {
+    function prepareForFontIcon() {
       if (!scope.svgIcon && !scope.svgSrc) {
-
         if (scope.fontIcon) {
           element.addClass('md-font ' + scope.fontIcon);
         }
-
-        if (scope.fontSet) {
-          element.addClass($mdIcon.fontSet(scope.fontSet));
-        }
-
-        if (shouldUseDefaultFontSet()) {
-          element.addClass($mdIcon.fontSet());
-        }
-
-      }
-
-      function shouldUseDefaultFontSet() {
-        return !scope.fontIcon && !scope.fontSet;
+        element.addClass($mdIcon.fontSet(scope.fontSet));
       }
     }
   }
