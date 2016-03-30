@@ -31,11 +31,9 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout, $r
 
     menuContainer.on('$mdInterimElementRemove', function() {
       self.isOpen = false;
-      $mdUtil.nextTick(function(){ $scope.onIsOpenChanged(self.isOpen);});
+      $mdUtil.nextTick(function(){ self.onIsOpenChanged(self.isOpen);});
     });
-<<<<<<< HEAD
-    $mdUtil.nextTick(function(){ $scope.onIsOpenChanged(self.isOpen);});
-=======
+    $mdUtil.nextTick(function(){ self.onIsOpenChanged(self.isOpen);});
 
     var menuContainerId = 'menu_container_' + $mdUtil.nextUid();
     menuContainer.attr('id', menuContainerId);
@@ -48,7 +46,6 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout, $r
     menuContainer.on('$destroy', function() {
       $mdMenu.destroy();
     });
->>>>>>> refs/remotes/angular/master
   };
 
   var openMenuTimeout, menuItems, deregisterScopeListeners = [];
@@ -120,7 +117,7 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout, $r
     if (self.isOpen) return;
     self.enableHoverListener();
     self.isOpen = true;
-    $mdUtil.nextTick(function(){ $scope.onIsOpenChanged(self.isOpen);});
+    $mdUtil.nextTick(function(){ self.onIsOpenChanged(self.isOpen);});
     triggerElement = triggerElement || (ev ? ev.target : $element[0]);
     triggerElement.setAttribute('aria-expanded', 'true');
     $scope.$emit('$mdMenuOpen', $element);
@@ -140,7 +137,7 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout, $r
 
   // Expose a open function to the child scope for html to use
   $scope.$mdOpenMenu = this.open;
-  $scope.onIsOpenChanged = function(isOpen) {
+  this.onIsOpenChanged = function(isOpen) {
     if (isOpen) {
       menuContainer.attr('aria-hidden', 'false');
       $element[0].classList.add('_md-open');
@@ -176,14 +173,9 @@ function MenuController($mdMenu, $attrs, $element, $scope, $mdUtil, $timeout, $r
   this.close = function closeMenu(skipFocus, closeOpts) {
     if ( !self.isOpen ) return;
     self.isOpen = false;
-<<<<<<< HEAD
-    $mdUtil.nextTick(function(){ $scope.onIsOpenChanged(self.isOpen);});
-    $scope.$emit('$mdMenuClose', $element);
-=======
-
+    $mdUtil.nextTick(function(){ self.onIsOpenChanged(self.isOpen);});
     var eventDetails = angular.extend({}, closeOpts, { skipFocus: skipFocus });
     $scope.$emit('$mdMenuClose', $element, eventDetails);
->>>>>>> refs/remotes/angular/master
     $mdMenu.hide(null, closeOpts);
 
     if (!skipFocus) {
