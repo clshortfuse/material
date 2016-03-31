@@ -68,6 +68,8 @@ angular
  *     the item if the search text is an exact match
  * @param {boolean=} md-match-case-insensitive When set and using `md-select-on-match`, autocomplete
  *     will select on case-insensitive match
+ * @param {boolean=} md-no-blur-on-escape If true, focus will not blurred on escape keydown
+ * @param {boolean=} md-no-clear-on-escape If true, input will not cleared on escape keydown
  *
  * @usage
  * ### Basic Example
@@ -149,7 +151,9 @@ function MdAutocomplete () {
       floatingLabel:    '@?mdFloatingLabel',
       autoselect:       '=?mdAutoselect',
       menuClass:        '@?mdMenuClass',
-      inputId:          '@?mdInputId'
+      inputId:          '@?mdInputId',
+      noBlurOnEscape:   '=?mdNoBlurOnEscape',
+      noClearOnEscape:  '=?mdNoClearOnEscape'
     },
     link: function(scope, element, attrs, controller) {
       // Retrieve the state of using a md-not-found template by using our attribute, which will
