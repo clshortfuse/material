@@ -1,0 +1,14 @@
+@each $name, $hue in $filled-list {
+  #{$name}.md-primary {
+    background-color: '{{TEST-primary-' + $hue + '}}';
+    color: '{{primary-' + $hue + '-contrast}}';
+  }
+  #{$name}.md-accent {
+    background-color: '{{accent-' + $filledHue + '}}';
+    color: '{{accent-' + $hue + '-contrast}}';
+  }
+  #{$name}.md-warn {
+    background-color: '{{warn-' + $filledHue + '}}';
+    color: '{{warn-' + $hue + '-contrast}}';
+  }
+}

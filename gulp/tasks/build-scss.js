@@ -36,6 +36,7 @@ exports.task = function() {
       .pipe(filter(['**', '!**/*.css']))
       .pipe(filter(['**', '!**/*-theme.scss']))
       .pipe(filter(['**', '!**/*-attributes.scss']))
+      .pipe(filter(['**', '!**/*-post.scss']))
       .pipe(concat('angular-material.scss'))
       .pipe(gulp.dest(dest))            // raw uncompiled SCSS
       .pipe(sass())
