@@ -14,30 +14,7 @@ var inputModule = angular.module('material.components.input', [
   .directive('ngMessages', ngMessagesDirective)
   .directive('ngMessage', ngMessageDirective)
   .directive('ngMessageExp', ngMessageDirective)
-  .directive('mdSelectOnFocus', mdSelectOnFocusDirective)
-
-  .animation('.md-input-invalid', mdInputInvalidMessagesAnimation)
-  .animation('.md-input-messages-animation', ngMessagesAnimation)
-  .animation('.md-input-message-animation', ngMessageAnimation);
-
-// If we are running inside of tests; expose some extra services so that we can test them
-if (window._mdMocksIncluded) {
-  inputModule.service('$$mdInput', function() {
-    return {
-      // special accessor to internals... useful for testing
-      messages: {
-        show        : showInputMessages,
-        hide        : hideInputMessages,
-        getElement  : getMessagesElement
-      }
-    }
-  })
-
-  // Register a service for each animation so that we can easily inject them into unit tests
-  .service('mdInputInvalidAnimation', mdInputInvalidMessagesAnimation)
-  .service('mdInputMessagesAnimation', ngMessagesAnimation)
-  .service('mdInputMessageAnimation', ngMessageAnimation);
-}
+  .directive('mdSelectOnFocus', mdSelectOnFocusDirective);
 
 /**
  * @ngdoc directive
@@ -139,6 +116,12 @@ function mdInputContainerDirective($mdTheming, $parse) {
     self.setHasPlaceholder = function(hasPlaceholder) {
       $element.toggleClass('md-input-has-placeholder', !!hasPlaceholder);
     };
+    self.setHasLabel = function(hasLabel) {
+      $element.toggleClass('md-input-has-label', !!hasLabel);
+    };
+    self.setHasMessages = function(hasMessages) {
+      $element.toggleClass('md-input-has-messages', !!hasMessages);
+    };
     self.setInvalid = function(isInvalid) {
       if (isInvalid) {
         $animate.addClass($element, 'md-input-invalid');
@@ -164,8 +147,10 @@ function labelDirective() {
       if (!containerCtrl || attr.mdNoFloat || element.hasClass('md-container-ignore')) return;
 
       containerCtrl.label = element;
+      containerCtrl.setHasLabel(true);
       scope.$on('$destroy', function() {
         containerCtrl.label = null;
+        containerCtrl.setHasLabel(false);
       });
     }
   };
@@ -472,14 +457,16 @@ function inputTextareaDirective($mdUtil, $window, $mdAria, $timeout, $mdGesture)
           .css('height', 'auto')
           .addClass('md-no-flex');
 
-        var height = getHeight();
+        // offsetHeight includes padding which can throw off our value
+        var originalPadding = element[0].style.padding || '';
+        element.css('padding', 0);
 
+        var height = getHeight();
         if (!lineHeight) {
-          // offsetHeight includes padding which can throw off our value
-          var originalPadding = element[0].style.padding || '';
-          lineHeight = element.css('padding', 0).prop('offsetHeight');
-          element[0].style.padding = originalPadding;
+          lineHeight = element.prop('offsetHeight');
         }
+
+        element[0].style.padding = originalPadding;
 
         if (minRows && lineHeight) {
           height = Math.max(height, lineHeight * minRows);
@@ -497,7 +484,7 @@ function inputTextareaDirective($mdUtil, $window, $mdAria, $timeout, $mdGesture)
         }
 
         if (lineHeight) {
-          element.attr('rows', Math.round(height / lineHeight));
+          element.attr('rows', Math.ceil(height / lineHeight));
         }
 
         element
@@ -546,7 +533,7 @@ function inputTextareaDirective($mdUtil, $window, $mdAria, $timeout, $mdGesture)
         var dragGestureHandler = $mdGesture.register(handle, 'drag', { horizontal: false });
 
 
-        element.wrap('<div class="md-resize-wrapper">').after(handle);
+        element.after(handle);
         handle.on('mousedown', onMouseDown);
 
         container
@@ -848,6 +835,11 @@ function ngMessagesDirective() {
     if (attrs.mdAutoHide == 'false' || hasVisibiltyDirective(attrs)) {
       element.toggleClass('md-auto-hide', false);
     }
+
+    inputContainer.setHasMessages(true);
+    scope.$on('$destroy', function() {
+      inputContainer.setHasMessages(false);
+    });
   }
 
   function hasVisibiltyDirective(attrs) {
@@ -902,179 +894,4 @@ function ngMessageDirective($mdUtil) {
       element.toggleClass('md-input-message-animation', true);
     }
   }
-}
-
-var $$AnimateRunner, $animateCss, $mdUtil, $log;
-
-function mdInputInvalidMessagesAnimation($$AnimateRunner, $animateCss, $mdUtil, $log) {
-  saveSharedServices($$AnimateRunner, $animateCss, $mdUtil, $log);
-
-  return {
-    addClass: function(element, className, done) {
-      showInputMessages(element, done);
-    }
-
-    // NOTE: We do not need the removeClass method, because the message ng-leave animation will fire
-  };
-}
-
-function ngMessagesAnimation($$AnimateRunner, $animateCss, $mdUtil, $log) {
-  saveSharedServices($$AnimateRunner, $animateCss, $mdUtil, $log);
-
-  return {
-    enter: function(element, done) {
-      showInputMessages(element, done);
-    },
-
-    leave: function(element, done) {
-      hideInputMessages(element, done);
-    },
-
-    addClass: function(element, className, done) {
-      if (className == "ng-hide") {
-        hideInputMessages(element, done);
-      } else {
-        done();
-      }
-    },
-
-    removeClass: function(element, className, done) {
-      if (className == "ng-hide") {
-        showInputMessages(element, done);
-      } else {
-        done();
-      }
-    }
-  };
-}
-
-function ngMessageAnimation($$AnimateRunner, $animateCss, $mdUtil, $log) {
-  saveSharedServices($$AnimateRunner, $animateCss, $mdUtil, $log);
-
-  return {
-    enter: function(element, done) {
-      var animator = showMessage(element);
-
-      animator.start().done(done);
-    },
-
-    leave: function(element, done) {
-      var animator = hideMessage(element);
-
-      animator.start().done(done);
-    }
-  };
-}
-
-function showInputMessages(element, done) {
-  var animators = [], animator;
-  var messages = getMessagesElement(element);
-  var children = messages.children();
-
-  if (messages.length == 0 || children.length == 0) {
-    $log.warn('mdInput messages show animation called on invalid messages element: ', element);
-    done();
-    return;
-  }
-
-  angular.forEach(children, function(child) {
-    animator = showMessage(angular.element(child));
-
-    animators.push(animator.start());
-  });
-
-  $$AnimateRunner.all(animators, done);
-}
-
-function hideInputMessages(element, done) {
-  var animators = [], animator;
-  var messages = getMessagesElement(element);
-  var children = messages.children();
-
-  if (messages.length == 0 || children.length == 0) {
-    $log.warn('mdInput messages hide animation called on invalid messages element: ', element);
-    done();
-    return;
-  }
-
-  angular.forEach(children, function(child) {
-    animator = hideMessage(angular.element(child));
-
-    animators.push(animator.start());
-  });
-
-  $$AnimateRunner.all(animators, done);
-}
-
-function showMessage(element) {
-  var height = parseInt(window.getComputedStyle(element[0]).height);
-  var topMargin = parseInt(window.getComputedStyle(element[0]).marginTop);
-
-  var messages = getMessagesElement(element);
-  var container = getInputElement(element);
-
-  // Check to see if the message is already visible so we can skip
-  var alreadyVisible = (topMargin > -height);
-
-  // If we have the md-auto-hide class, the md-input-invalid animation will fire, so we can skip
-  if (alreadyVisible || (messages.hasClass('md-auto-hide') && !container.hasClass('md-input-invalid'))) {
-    return $animateCss(element, {});
-  }
-
-  return $animateCss(element, {
-    event: 'enter',
-    structural: true,
-    from: {"opacity": 0, "margin-top": -height + "px"},
-    to: {"opacity": 1, "margin-top": "0"},
-    duration: 0.3
-  });
-}
-
-function hideMessage(element) {
-  var height = element[0].offsetHeight;
-  var styles = window.getComputedStyle(element[0]);
-
-  // If we are already hidden, just return an empty animation
-  if (parseInt(styles.opacity) === 0) {
-    return $animateCss(element, {});
-  }
-
-  // Otherwise, animate
-  return $animateCss(element, {
-    event: 'leave',
-    structural: true,
-    from: {"opacity": 1, "margin-top": 0},
-    to: {"opacity": 0, "margin-top": -height + "px"},
-    duration: 0.3
-  });
-}
-
-function getInputElement(element) {
-  var inputContainer = element.controller('mdInputContainer');
-
-  return inputContainer.element;
-}
-
-function getMessagesElement(element) {
-  // If we ARE the messages element, just return ourself
-  if (element.hasClass('md-input-messages-animation')) {
-    return element;
-  }
-
-  // If we are a ng-message element, we need to traverse up the DOM tree
-  if (element.hasClass('md-input-message-animation')) {
-    return angular.element($mdUtil.getClosest(element, function(node) {
-      return node.classList.contains('md-input-messages-animation');
-    }));
-  }
-
-  // Otherwise, we can traverse down
-  return angular.element(element[0].querySelector('.md-input-messages-animation'));
-}
-
-function saveSharedServices(_$$AnimateRunner_, _$animateCss_, _$mdUtil_, _$log_) {
-  $$AnimateRunner = _$$AnimateRunner_;
-  $animateCss = _$animateCss_;
-  $mdUtil = _$mdUtil_;
-  $log = _$log_;
 }

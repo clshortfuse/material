@@ -799,6 +799,10 @@ describe('md-input-container directive', function() {
 
         handle.triggerHandler('mousedown');
         ngElement.triggerHandler('$md.dragstart');
+
+        // Remove focus from element
+        ngElement.triggerHandler('$md.dragend');
+
         ngTextarea.val('1\n2\n3\n4\n5\n6');
         ngTextarea.triggerHandler('input');
         expect(textarea.offsetHeight).toBe(oldHeight);
